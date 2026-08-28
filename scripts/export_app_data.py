@@ -46,7 +46,18 @@ def meta(**kw) -> dict:
     }
 
 
-def compute_mde(ref: ControlRef, n_cells: int = N_PRED, seed: int = 0) -> np.ndarray:
+# BH 有效阈值：真实打分器在每个扰动内、对 gate 内 m 个基因做 BH。
+# 在解点 k = |R_p| 处，p 值截断为 alpha*k/m，对应的双侧 z 远大于 1.96。
+# 用 alpha=0.05 的单基因阈值会把门槛系统性低估 1.62 倍。
+M_GATE_REF = 9929
+N_REAL_REF = 288
+ALPHA = 0.05
+Z_BH = float(norm.ppf(1 - (ALPHA * N_REAL_REF / M_GATE_REF) / 2))   # 3.184
+Z_NAIVE = 1.96
+
+
+def compute_mde(ref: ControlRef, n_cells: int = N_PRED, seed: int = 0,
+                z: float = Z_BH) -> np.ndarray:
     """每个门内基因的最小可检出效应 |lfc|。
 
     定义：从对照里自举 n_cells 个细胞的该基因 CPM 值，整体乘 2**lfc 后取整，
@@ -58,7 +69,7 @@ def compute_mde(ref: ControlRef, n_cells: int = N_PRED, seed: int = 0) -> np.nda
     boot = rg.choice(n2, n_cells, replace=False)
     base = np.asarray(ref._cpm_csr[boot][:, ref.gidx].todense())
     sd = math.sqrt(n_cells * n2 * (n_cells + n2 + 1) / 12.0)
-    crit = 1.96 * sd / (n_cells * n2)
+    crit = z * sd / (n_cells * n2)
 
     out = np.full(ref.G, np.nan)
     for j in range(ref.G):
@@ -82,7 +93,8 @@ def compute_mde(ref: ControlRef, n_cells: int = N_PRED, seed: int = 0) -> np.nda
 
 def export_mde(ref: ControlRef, genes: np.ndarray) -> dict:
     t0 = time.time()
-    mde = compute_mde(ref)
+    mde = compute_mde(ref, z=Z_BH)
+    mde_naive = compute_mde(ref, z=Z_NAIVE)
     elapsed = time.time() - t0
 
     ok = np.isfinite(mde) & (mde < 3.99)
@@ -92,11 +104,12 @@ def export_mde(ref: ControlRef, genes: np.ndarray) -> dict:
     print(f"MDE 全量 {ref.G:,} 基因: {elapsed:.1f}s")
     print(f"一类错误噪声底: MDE=0 的基因占 {floor_frac:.2%}（理论 4.76%）")
     print(f"诚实的动态范围 p95/p25 = {span:.1f}×   （p95/p5 会被噪声底虚高，不用）")
-    ref_vals = {"p5": 0.032, "p25": 0.097, "p50": 0.177, "p75": 0.351, "p95": 1.044}
-    print(f"{'分位':>6} {'本次':>9} {'参考(2k抽样)':>14} {'相对差':>8}")
-    for k, v in qs.items():
-        r = ref_vals[k]
-        print(f"{k:>6} {v:9.4f} {r:14.4f} {abs(v - r) / r:7.1%}")
+    ok_n = np.isfinite(mde_naive) & (mde_naive < 3.99)
+    qs_naive = {f"p{q}": round(float(np.percentile(mde_naive[ok_n], q)), 4) for q in (5, 25, 50, 75, 95)}
+    print(f"BH 有效 z = {Z_BH:.3f}（单基因 alpha=0.05 的 z = {Z_NAIVE}）")
+    print(f"{'分位':>6} {'BH(主)':>9} {'alpha=.05':>11} {'倍数变化':>10}")
+    for k in qs:
+        print(f"{k:>6} {qs[k]:9.4f} {qs_naive[k]:11.4f} {2 ** qs[k]:9.2f}x")
 
     edges = np.linspace(0.0, 2.0, 61)
     counts, _ = np.histogram(np.clip(mde[ok], 0, 2.0), bins=edges)
@@ -129,10 +142,13 @@ def export_mde(ref: ControlRef, genes: np.ndarray) -> dict:
             elapsedSec=round(elapsed, 1), sigma="uncorrected",
             floorFrac=round(floor_frac, 4),
             spanP95P25=round(span, 1),
-            caveat=("MDE=0 的那 ~5% 基因是 alpha=0.05 的名义一类错误率，不是可检出性；"
-                    "故动态范围用 p95/p25。另：真实打分器在 ~9,929 个基因上做 BH，"
-                    "比单基因 alpha=0.05 严得多，所以此处的 MDE 是操作门槛的下界。"),
+            zBH=round(Z_BH, 3),
+            quantilesAlpha05=qs_naive,
+            caveat=("主值用 BH 有效阈值 z=3.184（alpha*k/m, k=288, m=9929），"
+                    "不是单基因 alpha=0.05 的 1.96 —— 后者把门槛低估 1.62 倍。"
+                    "动态范围用 p95/p25：p5 落在一类错误噪声底上。"),
         ),
+        "quantilesAlpha05": qs_naive,
         "quantiles": qs,
         "hist": {"binEdges": [round(float(e), 4) for e in edges],
                  "counts": [int(c) for c in counts]},
@@ -177,7 +193,9 @@ def export_callset() -> dict:
     """报数 K 的权衡，纯解析。nReal 由官方 jac 基线锚点反推：0.029 × 9929 ≈ 288。"""
     n_real = 288
     anchors = {"jac": {"b": 0.029, "r": 0.399}, "fid": {"b": 0.513, "r": 0.813}}
-    a_true, a_false = 0.90, 0.55
+    # a_false 不是自由参数：fid 数的是「你报的基因里预测 lfc 符号与参考的一致」，
+    # 而对没有真实效应的基因，参考测到的 lfc 是噪声主导 → 符号是掷硬币 → 结构性 0.5。
+    a_true, a_false = 0.90, 0.50
     ks = np.unique(np.round(np.logspace(math.log10(20), math.log10(3000), 80)).astype(int))
 
     curves = []
@@ -205,7 +223,14 @@ def export_callset() -> dict:
 
     return {
         "meta": meta(nRealSource="从官方 jac 基线锚点 0.021–0.037 × 门内基因数反推",
-                     assumptions=f"aTrue={a_true}, aFalse={a_false}, |R̂|=K"),
+                     assumptions=(f"aTrue={a_true}, aFalse={a_false}（结构性钉住，非自由参数）, |R̂|=K；"
+                     f"K=nReal 时 fid = 0.5 + (aTrue-0.5)*h"),
+        hReplicate=round(2 * 0.399 / 1.399, 3),
+        hToTieLeader=0.134,
+        zeroBiologyCeiling=0.130,
+        theoryNote=("h 的物理上限由 replicate 锚点给出：r_jac=0.399 → h=0.570，"
+                    "即同系重做实验也只重叠 57%。追平榜首需 h>=0.134 = replicate 的 23%。"
+                    "只按可检出性排序的『零生物学』策略理论上限 h=0.130，赢不了。")),
         "nReal": n_real,
         "anchors": anchors,
         "curves": curves,

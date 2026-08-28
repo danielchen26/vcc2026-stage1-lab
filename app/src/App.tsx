@@ -26,7 +26,7 @@ const C = {
       </>
     ),
     meta: [
-      ["检出门槛动态范围 p95/p25", `${MDE_RANGE.toFixed(1)}×`],
+      ["追平榜首需要的 h", "≥ 0.134"],
       ["全量计算耗时", `${MDE_META.elapsedSec}s`],
       ["报数最优点 vs 解析预测", "287 / 288"],
       ["评估的自有框架", "4 套 · 1 套真金"],
@@ -67,8 +67,9 @@ const C = {
       <>
         参考答案 <M tex="R_p" /> 是两个集合的交：
         <b>「生物上真的变了」</b>（未知，要建模）∩ <b>「在这个细胞系里检得出来」</b>
-        （<b>官方已经把它交给你了</b>）。第二项跨基因动态范围 {MDE_RANGE.toFixed(1)} 倍（p95/p25），
-        而且 9,929 个基因全量算完只要 {MDE_META.elapsedSec} 秒。
+        （<b>官方已经把它交给你了</b>）。第二项跨基因动态范围 {MDE_RANGE.toFixed(1)} 倍（p95/p25，用 BH 有效阈值），
+        9,929 个基因全量算完只要 {MDE_META.elapsedSec} 秒。
+        <b>但理论确认下来它赢不了</b> —— 只靠它上限 <M tex="h=0.130" />，追平榜首需 <M tex="h\ge0.134" />。
       </>
     ),
     qTitle: "全量实测的检出门槛分位数",
@@ -126,7 +127,7 @@ const C = {
       </>
     ),
     meta: [
-      ["Threshold dynamic range p95/p25", `${MDE_RANGE.toFixed(1)}×`],
+      ["h needed to tie the leader", "≥ 0.134"],
       ["Full computation", `${MDE_META.elapsedSec}s`],
       ["Optimal K vs analytic prediction", "287 / 288"],
       ["Own frameworks audited", "4 · 1 is gold"],
@@ -169,8 +170,10 @@ const C = {
         The reference answer <M tex="R_p" /> is the intersection of two sets:{" "}
         <b>&ldquo;genuinely changed&rdquo;</b> (unknown, needs modelling) ∩{" "}
         <b>&ldquo;detectable in this cell line&rdquo;</b> (<b>already handed to you</b>). The second
-        spans a {MDE_RANGE.toFixed(1)}× range across genes (p95/p25), and computing it for all 9,929 genes
-        takes {MDE_META.elapsedSec} seconds.
+        spans a {MDE_RANGE.toFixed(1)}× range across genes (p95/p25, at the BH-effective threshold), and
+        computing it for all 9,929 genes takes {MDE_META.elapsedSec} seconds.
+        <b>But theory says it cannot win on its own</b> — it caps at <M tex="h=0.130" /> while tying the
+        leader needs <M tex="h\ge0.134" />.
       </>
     ),
     qTitle: "Measured detection-threshold quantiles, full population",

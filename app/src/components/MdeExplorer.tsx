@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import mde from "../data/mde.json";
 import { useLang } from "../i18n";
+import { M } from "./ui";
 
 const { hist, quantiles, scatter, genes, meta } = mde;
 
@@ -22,8 +23,8 @@ const sx = (v: number) =>
     (SW - SP.l - SP.r);
 const sy = (v: number) => SP.t + (1 - Math.min(v, XMAX) / XMAX) * (SH - SP.t - SP.b);
 
-// 动态范围用 p95/p25：p5 落在 alpha=0.05 的一类错误噪声底上（见 meta.caveat），
-// 用 p95/p5 会把这个范围虚高三倍。
+// 门槛用 BH 有效阈值 z=3.184（alpha*k/m），不是单基因 alpha=0.05 的 1.96。
+// 范围保守地用 p95/p25（p95/p5 = 12.8×）。
 const RANGE = quantiles.p95 / quantiles.p25;
 
 const TXT = {
@@ -57,9 +58,12 @@ const TXT = {
         跨基因动态范围 <b>{RANGE.toFixed(1)}×</b>（p95/p25）：四分位处涨 {(2 ** quantiles.p25).toFixed(2)} 倍就被判显著，
         而 95 分位处要涨 {(2 ** quantiles.p95).toFixed(2)} 倍。
         <br />
-        <b>两个必须说清的限定</b>：① 有 {(meta.floorFrac * 100).toFixed(1)}% 的基因门槛为 0 —— 那是 α=0.05 的
-        名义一类错误率（理论 4.76%），不是可检出性，所以范围用 p95/p25 而不是 p95/p5。
-        ② 真实打分器在 9,929 个基因上做 BH，比单基因 α=0.05 严得多，<b>所以这里的门槛是操作门槛的下界</b>。
+        <b>这里用的是打分器真实的阈值。</b>BH 在每个扰动内、对 9,929 个基因做校正，
+        在解点 <M tex="k=|R_p|" /> 处 <M tex="p" /> 值截断为 <M tex="\alpha k/m" />，对应双侧
+        <M tex="z=3.184" /> —— 而不是单基因 α=0.05 的 1.96。用后者会把门槛**低估 1.6 倍**。
+        <br />
+        ⚠️ 但<b>可检出性本身赢不了比赛</b>：只按门槛排序、报 288 个基因，理论上限只到
+        <M tex="h=0.130" />，而追平榜首需要 <M tex="h \ge 0.134" />。它是边际修正项，不是策略。
         <br />
         所以判定规则不该是「预测幅度超过某个固定阈值」，而应该是 <b>|预测幅度| &gt; 该基因自己的门槛</b>。
       </>
@@ -96,10 +100,14 @@ const TXT = {
         {" "}{(2 ** quantiles.p25).toFixed(2)}× change is already called significant, while at the 95th
         percentile it takes {(2 ** quantiles.p95).toFixed(2)}×.
         <br />
-        <b>Two necessary caveats</b>: (1) {(meta.floorFrac * 100).toFixed(1)}% of genes have a threshold of
-        zero — that is the nominal type-I error rate at α=0.05 (theory 4.76%), not detectability, which is
-        why the range uses p95/p25 rather than p95/p5. (2) The real scorer applies BH across 9,929 genes,
-        far stricter than a per-gene α=0.05, <b>so the threshold here is a lower bound on the operational one</b>.
+        <b>This uses the scorer's real threshold.</b> BH corrects within each perturbation across 9,929
+        genes, so at the solution point <M tex="k=|R_p|" /> the p-value cutoff is <M tex="\alpha k/m" />,
+        a two-sided <M tex="z=3.184" /> — not the per-gene 1.96 of α=0.05. Using the latter
+        **understates the threshold by 1.6×**.
+        <br />
+        ⚠️ But <b>detectability alone cannot win</b>: ranking by threshold and flagging 288 genes caps
+        out at <M tex="h=0.130" /> in theory, while tying the leader needs <M tex="h \ge 0.134" />.
+        It is a marginal correction, not a strategy.
         <br />
         So the call rule should not be &ldquo;predicted effect above some fixed threshold&rdquo; but{" "}
         <b>|predicted effect| &gt; that gene&rsquo;s own threshold</b>.
