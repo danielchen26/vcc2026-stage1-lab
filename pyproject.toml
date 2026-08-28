@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vcclab"
+version = "0.1.0"
+description = "Arc Institute Virtual Cell Challenge 2026 Stage 1 research library"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.13",
+    "pandas>=2.0",
+    "h5py>=3.10",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vcclab"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,26 @@
+# 挑战数据与大文件绝不入库
+data/*
+!data/.gitkeep
+*.h5ad
+*.zip
+*.vcc
+*.parquet
+*.npz
+*.feather
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+.vercel/
+
+# OS
+.DS_Store
