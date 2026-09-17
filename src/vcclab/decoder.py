@@ -41,18 +41,42 @@ def design_cells(
     n_cells: int = 400,
     shift: float = 0.10,
     seed: int = 0,
+    lfc_all=None,
 ) -> np.ndarray:
     """Stage 2: 给定响应基因集 (gate 内下标) 与目标 lfc, 构造 n_cells 个整数
     计数细胞. 关键约束: CPM 是成分数据, 目标 profile 必须重归一到 1e6.
 
     null 背景用真实对照细胞自举 -> psi_bar 自动校准, 稀疏度/过散天然正确.
     响应基因用二点分布 (0, s), 对非零比例 f 二分, 使平均对照分位数命中
-    0.5 +- shift. 显著性(psi_bar) 与方向(一阶矩) 完全解耦."""
+    0.5 +- shift. 显著性(psi_bar) 与方向(一阶矩) 完全解耦.
+
+    `lfc_all` (可选, 长度 = ref.G, 按 gate 内顺序): 给**全部** gate 内基因设一阶矩,
+    而显著性仍只给 `r_set`. 官方 6 个计分指标里有 4 个 (`de_wilcoxon_lfc_nmae`、
+    两个 `de_wilcoxon_direction_*`、`expr_mse_unbiased_capped_norm`) 读的是 lfc 而非
+    显著集, 且 `lfc_nmae` 的 gate 在 **real 侧** —— 只给召集集合赋 lfc 会让其余基因
+    的 lfc 为 0, 而 `lfc_pred = 0` 时 nmae 的分子恰等于分母 (= 1.0, 即「预测零」),
+    方向也因符号未定义退化到随机. 实测不传 `lfc_all` 时
+    `direction_fidelity_yield_raw` = 0.4954 (随机 = 0.5).
+
+    `r_set` 上的 `lfc` 覆盖 `lfc_all` 的对应位置.
+
+    ⚠️ 成分约束: `tgt` 重归一到 1e6 后, **实际** lfc 是 log2(tgt / m_full), 与传入的
+    意图值相差一个全局常数 -log2(renorm). 只在 `r_set` 上赋值时该常数可忽略; 给全部
+    基因赋值时不可忽略, 故下面对 `lfc_all` 做质量加权居中, 使 renorm ~ 1.
+    """
     rg = np.random.default_rng(seed)
     r_set = np.asarray(r_set)
     lfc = np.asarray(lfc, dtype=float)
 
     lf = np.zeros(ref.n_genes)
+    if lfc_all is not None:
+        la = np.asarray(lfc_all, dtype=float)
+        if la.shape != (ref.G,):
+            raise ValueError(f"lfc_all 形状须为 ({ref.G},), 得到 {la.shape}")
+        la = np.where(np.isfinite(la), la, 0.0)
+        w = ref.m_gate / max(ref.m_gate.sum(), 1e-12)   # 质量加权居中 -> renorm ~ 1
+        la = la - float(w @ la)
+        lf[ref.gidx] = la
     lf[ref.gidx[r_set]] = lfc
     tgt = ref.m_full * 2.0**lf
     tgt *= TS_CELL / tgt.sum()
