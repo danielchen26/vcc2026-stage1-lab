@@ -19,11 +19,22 @@ import numpy as np
 
 from .scorer import TS_CELL, ControlRef
 
-__all__ = ["hamilton", "design_cells"]
+__all__ = ["hamilton", "stochastic_round", "design_cells"]
 
 
 def hamilton(row: np.ndarray, total: int = 1_000_000) -> np.ndarray:
-    """最大余数法取整, 使行和恰为 total. counts == CPM 的前提."""
+    """最大余数法取整, 使行和恰为 total. counts == CPM 的前提.
+
+    ⚠️ 这是**确定性**的, 而这有一个实测的代价 (E28): 18,080 个基因里 CPM ~ 0.016 的
+    基因余额排在末尾, 在**每一个**细胞都分到 0 计数, 故池计数恒为 0 -- 2,264 个基因被
+    确定性清零, 在每一行的 pred_eff 上产生**相同**的 -log1p 伪影. 共享分量把所有余弦
+    拉到一起, 摧毁 `pds_cosine` 的排名. 真实数据里的 2,277 个零基因是真抽样产生的,
+    不是同一批基因, 无法抵消.
+
+    但它同时是**零抽样噪声**的, 在召集集合小 (K=29) 时这是关键优势: 换成纯多项式抽样后
+    K=29 的三个扰动 pds 从 0.143/0.286/0.714 掉到 0.0/0.143/0.0. 两面都是实测的,
+    故保留本函数为默认, 随机版本见 `stochastic_round`.
+    """
     fl = np.floor(row)
     need = int(total - fl.sum())
     if need > 0:
@@ -31,6 +42,30 @@ def hamilton(row: np.ndarray, total: int = 1_000_000) -> np.ndarray:
     elif need < 0:
         nz = np.flatnonzero(fl > 0)
         fl[nz[np.argpartition(row[nz] - fl[nz], -need - 1)[: -need]]] -= 1
+    return fl
+
+
+def stochastic_round(row: np.ndarray, rng, total: int = 1_000_000) -> np.ndarray:
+    """系统抽样 (Madow) 取整: 每个基因 +1 的概率**恰等于**其小数部分, 且入选总数恰为
+    need, 故行和仍恰为 total 且逐基因无偏.
+
+    这是 `hamilton` 死区的最小修复: CPM 0.016 的基因入选概率 0.016, 400 个细胞里约
+    6.4 个拿到 +1, 池计数约 6.4 而非恒 0. 与纯多项式抽样的区别在于**只有小数部分是
+    随机的**, 整数部分与 bootstrap 继承的过度离散/dropout 结构完全保留 --
+    纯多项式抽样会丢掉后者 (实测: 20k 深度下 pred 1,132 MB vs 同深度 real 110 MB).
+    """
+    fl = np.floor(row)
+    frac = row - fl
+    need = int(round(total - fl.sum()))
+    if need <= 0:
+        return hamilton(row, total) if need < 0 else fl
+    c = np.cumsum(frac)
+    if c[-1] <= 0:
+        return hamilton(row, total)
+    # c[-1] == need (至多差浮点), 故区间宽 1, 每个基因覆盖长度 frac_i -> 入选概率 frac_i
+    step = c[-1] / need
+    picks = np.searchsorted(c, (rng.random() + np.arange(need)) * step)
+    np.add.at(fl, np.clip(picks, 0, row.size - 1), 1.0)
     return fl
 
 
@@ -42,6 +77,7 @@ def design_cells(
     shift: float = 0.10,
     seed: int = 0,
     lfc_all=None,
+    quantizer: str = "hamilton",
 ) -> np.ndarray:
     """Stage 2: 给定响应基因集 (gate 内下标) 与目标 lfc, 构造 n_cells 个整数
     计数细胞. 关键约束: CPM 是成分数据, 目标 profile 必须重归一到 1e6.
@@ -105,4 +141,10 @@ def design_cells(
         V[:, ref.gidx[j]] = col
 
     V *= (TS_CELL / V.sum(1))[:, None]
-    return np.vstack([hamilton(V[i]) for i in range(n_cells)]).astype(np.float32)
+    if quantizer == "hamilton":
+        rows = [hamilton(V[i]) for i in range(n_cells)]
+    elif quantizer == "stochastic":
+        rows = [stochastic_round(V[i], rg) for i in range(n_cells)]
+    else:
+        raise ValueError(f"quantizer 须为 'hamilton' 或 'stochastic', 得到 {quantizer!r}")
+    return np.vstack(rows).astype(np.float32)
