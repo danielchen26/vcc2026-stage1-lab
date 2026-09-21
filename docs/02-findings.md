@@ -921,3 +921,64 @@ V3 是最贵的一次：我在提交信息里写了"单旋钮实验"，而它同
 12.65 s vs 官方 2,643 s。它只需 pseudobulk 均值，不碰 DE。
 **结论：pds 的设计搜索可以本地做，其余五个指标不行** —— V3 的教训是
 harness 忠实不代表 build 忠实，两者必须分别验证。
+
+## F30 · 三步单旋钮把 `avg_score` 从 0.1110 推到 0.1873（领先者 0.1899 的 98.6%）`实测`
+
+每一步都由上一步的 build **逐字复制 + 一处 `str.replace` + `assert` 命中**生成，
+所以每一行变化都可归因（这是 F29 的教训换来的纪律）。
+
+| 变体 | 改动 | `avg_score` | Δ |
+|---|---|---|---|
+| A | 基线：$\lvert\beta\rvert/\text{SE}$ 排序，K=29/288/G，$\lambda$=1.0 | 0.1110 | — |
+| **V5** | 排序 → $\lvert\beta\rvert$ | **0.1559** | +0.0449 |
+| **V6** | $\lambda$ → 0.5 | **0.1762** | +0.0203 |
+| **V7** | K → 扁平 288 | **0.1873** | +0.0111 |
+
+被否证的三条（同样记录）：
+
+| 变体 | 改动 | `avg_score` |
+|---|---|---|
+| V2 | 量化器 + top1000 + 去面板均值（三改一起） | 0.0922 |
+| V3 | 自称单旋钮，实际四改 | −0.0119 |
+| V4 | `hamilton` → `stochastic_round` | 0.1109（与 A 逐位相同）|
+
+### 逐指标（V7 vs A）
+
+| 指标 | A | V7 | 剩余空间 |
+|---|---|---|---|
+| `pds_cosine` | 0.0357 | **0.5000** | 0.500 |
+| `expr_mse_unbiased_capped_norm` | 0.5219 | **0.5988** | 0.401 |
+| `de_wilcoxon_lfc_nmae` | −0.0191 | **0.0092** | 0.991 |
+| `de_wilcoxon_direction_reach_raw` | 0.1284 | 0.0147 | **0.985** |
+| `de_wilcoxon_sig_jaccard` | 0.0010 | 0.0009 | 0.999 |
+| `de_wilcoxon_direction_fidelity_yield_raw` | −0.0017 | 0.0000 | 1.000 |
+
+### 三个机制（都是实测，不是推断）
+
+1. **排序统计量是 `pds_cosine` 的主因**：$\lvert\beta\rvert$ 比 $\lvert\beta\rvert/\text{SE}$ 高
+   +0.393 `from_baseline`。余弦由大坐标主导，$\lvert\beta\rvert$ 把信号放在余弦看得见的地方；
+   $\lvert\beta\rvert/\text{SE}$ 选高置信度基因（常是高表达小效应），在余弦里几乎不可见。
+   ⚠️ $\lvert\beta\rvert/\text{SE}$ 是 E18 为 `sig_jaccard` 选出的最优排序 ——
+   **为 1/6 的指标调出来的最优，在另一个 1/6 上是最差。**
+
+2. **余弦对尺度不变，所以 $\lambda$ 收缩对 `pds` 免费**：$\lambda$ = 1.0/0.7/0.5 的 pds
+   全部是 0.7143。这一步的代价只可能落在别处 —— `lambda_probe.py` 先在本地证明了这点，
+   再用官方打分器确认代价落在 `direction_reach` 上。
+
+3. **$\lambda$ 上的直接冲突**：`direction_reach` 要大 lfc（实现值须高过 bootstrap 噪声，
+   否则符号随机化、纯前缀立刻崩），`expr_mse`/`lfc_nmae` 要收缩 lfc（接近 MSE 最优）。
+   $\lambda$: 1.0 → 0.5 使 reach 从 0.1424 掉到 0.0132，而 expr_mse 从 0.3930 涨到 0.6018、
+   `lfc_nmae` **首次转正**。净 +0.0203，故 0.5 胜。线性外推下 V7 已是最优。
+
+### ⚠️ 未解决的风险：官方打分器标记了我们的提交
+
+V6/V7 都触发同一条警告：
+
+> across-perturbation spread 0.003167 vs claimed sampling correction 0.006544
+> (ratio 0.484 < 0.7)。**per-cell scatter 在 pseudobulk 里基本抵消，这不像一个
+> i.i.d. 抽样的预测细胞群** —— 诚实的提交测出约 1.0，钉住聚合的那两条 arm 测出 0.006 和 0.000。
+> 校正是有界的（issue #348）故分数未被抬高，但这份提交值得查看。
+
+根因在 `design_cells`：`V *= tgt / np.maximum(V.mean(0), 1e-12)` **强制**经验均值精确
+等于目标 profile，消除了均值自身的抽样波动。作为比赛提交这是**可检测的伪影**，
+组织者明确在看。修法是让均值按 i.i.d. 抽样自然波动，代价未测。
