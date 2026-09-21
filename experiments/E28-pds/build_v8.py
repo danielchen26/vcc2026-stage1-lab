@@ -130,7 +130,8 @@ def build() -> None:
     ctrl = thin(read_rows(ntc_rows), VCC_UMI, rng)
     ntc_path = OUT / "_ctrl.h5ad"
     ad.AnnData(X=sp.csr_matrix(ctrl),
-               var=pd.DataFrame(index=pd.Index(genes))).write_h5ad(ntc_path)
+               var=pd.DataFrame(index=pd.Index(genes))).write_h5ad(
+                   ntc_path, compression="gzip")   # 磁盘紧张：临时对照也压缩
     ref = ControlRef.load(ntc_path, list(genes))
     ntc_path.unlink(missing_ok=True)      # 磁盘只剩 ~2 GB，不能同时放 _ctrl 与 pred_v8
     gidx = np.asarray(ref.gidx)

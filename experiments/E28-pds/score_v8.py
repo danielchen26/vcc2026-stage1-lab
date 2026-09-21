@@ -53,5 +53,19 @@ def main():
           f"  (差 {fb['avg_score']-0.1899:+.4f})")
     print(f"耗时 {time.time()-t0:.0f}s")
 
+    # AUTO_CLEAN：聚合已落盘为 agg_*.parquet（几 KB），提交文件本身不再需要。
+
+    # 机器只有约 25 GB 余量而每份提交 292 MB（gzip）/ 1.1 GB（未压缩），故评分成功后立刻删。
+
+    sub = OUT / "pred_v8.h5ad"
+
+    if sub.exists():
+
+        mb = sub.stat().st_size / 1e6
+
+        sub.unlink()
+
+        print(f"已清理 {sub.name}（{mb:.0f} MB）；结果保留在 agg_*.parquet")
+
 if __name__ == "__main__":
     main()
