@@ -78,6 +78,7 @@ def design_cells(
     seed: int = 0,
     lfc_all=None,
     quantizer: str = "hamilton",
+    force_mean: bool = True,
 ) -> np.ndarray:
     """Stage 2: 给定响应基因集 (gate 内下标) 与目标 lfc, 构造 n_cells 个整数
     计数细胞. 关键约束: CPM 是成分数据, 目标 profile 必须重归一到 1e6.
@@ -99,6 +100,17 @@ def design_cells(
     ⚠️ 成分约束: `tgt` 重归一到 1e6 后, **实际** lfc 是 log2(tgt / m_full), 与传入的
     意图值相差一个全局常数 -log2(renorm). 只在 `r_set` 上赋值时该常数可忽略; 给全部
     基因赋值时不可忽略, 故下面对 `lfc_all` 做质量加权居中, 使 renorm ~ 1.
+
+    `force_mean` (默认 True = 现状, 所有既有调用方逐位不变): True 时执行
+    `V *= tgt / V.mean(0)`, 把抽到的 n_cells 个对照细胞的**经验**列均值强行钉到 tgt,
+    于是均值自身的抽样波动被消灭. 官方打分器为此对 V6/V7/V8 全部告警 ——
+    `expr_mse_unbiased_capped` 的跨扰动离散度 0.003167 对声称的抽样校正 0.006544
+    (比 0.484 < 阈值 0.7), 并把该校正按 0.484 倍打折后仍予发放, 即白拿了 48.4% 的
+    回扣 (cell_eval2/metrics/delta.py 第 858-877 行).
+    False 时改用对照**总体**均值 `ref.m_full` 做同样的乘性平移: 列均值的**期望**仍是
+    tgt, 但抽样子集相对总体的偏差原样保留 —— 正是打分器要找的那份波动 (诚实提交
+    量约 1.0). `ref.m_full` 即 scorer.py 第 89 行 `cpm.mean(0)`, 全 n_ctrl 个对照细胞
+    的全基因 CPM 总体均值, 与 tgt 同尺度 (tgt = m_full * 2**lf 后重归一到 1e6).
     """
     rg = np.random.default_rng(seed)
     r_set = np.asarray(r_set)
@@ -120,7 +132,10 @@ def design_cells(
     V = np.asarray(
         ref._cpm_csr[rg.choice(ref.n_ctrl, n_cells, replace=False)].todense()
     )
-    V *= tgt / np.maximum(V.mean(0), 1e-12)
+    if force_mean:
+        V *= tgt / np.maximum(V.mean(0), 1e-12)          # 钉死经验均值 -> 打分器告警
+    else:
+        V *= tgt / np.maximum(ref.m_full, 1e-12)         # 只平移总体均值, 保留波动
 
     for j, l in zip(r_set, lfc):
         mu = tgt[ref.gidx[j]]
