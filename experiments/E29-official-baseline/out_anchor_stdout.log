@@ -1,0 +1,7 @@
+real 载入 2s  (21600, 18080)
+seeds=[2968811710, 3677149159, 745650761, 2884920346, 2642120001]
+expected=['pds_cosine', 'expr_mse_unbiased', 'expr_mse_unbiased_capped', 'expr_distance_unbiased', 'expr_real_mass_ratio', 'expr_mse_unbiased_capped_norm', 'de_wilcoxon_lfc_nmae', 'de_wilcoxon_direction_fidelity_yield_raw', 'de_wilcoxon_direction_reach_raw', 'de_wilcoxon_sig_jaccard']
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (

@@ -173,4 +173,26 @@ $$b_{\text{jac}} \approx \frac{\mathbb{E}|R_p|}{9{,}863} \quad\Longrightarrow\qu
 | `fid` | 0.514 | 0.505–0.522 | 0.795–0.832 | **0.003** | **方向是掷硬币** |
 | `reach` | 0.267 | 0.047–0.097 | 0.958–0.978 | 0.213 | 有一点信号 |
 
+官方换算式**已从源码确认**（E29，`measured`）：$\text{scaled} = (u - b)/(r - b)$，
+其中 $b$ 是实测基线、$r$ 是**实测 split-half replicate anchor**，不是常数 1。
+实现路径 `score.py:874 → 898 → _replicate_entries(score.py:377) → 431 → 270`，
+第 431 行把 catalog policy 的 anchor 换成实测 $r$：
+`replace(spec.scoring, anchor=float(rep), allow_negative_baseline=False)`；
+`scoring.score_one` 的未夹持核心就是 $(u-b)/(r-b)$。
+
+**反向验证**（E29 §4.1，`measured`）：把上表第一名自己的六个 raw 喂进这个换算式，
+六项里**五项**加上总分 0.18983 都落在 $b$/$r$ 区间两端构成的括号内
+（$b_{lo}r_{lo}$ 0.20751 / $b_{hi}r_{hi}$ 0.17244）。这是抓取正确性的独立证据。
+
+⚠️ **唯一不闭合的一项是 `mse`，这一行的 $b$ 需要修正**（`inferred`）：
+published 0.041 从四个角里任何一个都到不了，最大角只有 0.0348。
+按中位 $r$ 反解 $(0.959 - b)/(0.036 - b) = 0.041$ 得 $b \approx 0.9985$，
+比记录的 0.986–0.992 高约 0.007。要么这个 $b$ 区间偏低，要么 raw 0.959 是四舍五入过的。
+对总分影响 $\le 0.002$。要测准它需要官方冻结 bundle 的 `baseline_agg`，我们没有。
+
+⚠️ 两个 policy 细节解释了为什么这张表里有的指标能是负数、有的不能
+（`catalog.py`，`measured`）：`mse` 的 `clamp_low = 0.0`，所以**永远 ≥ 0**；
+`jac` 是 `clamp_low=None, metric_min=0.0`，**无地板**，所以第一名的 `jac` 能印成 −0.004。
+两张表在「哪些指标允许负数」上完全一致。
+
 **全场 315 队只在 `pds` 上得分。占总分三分之二的四个 DE 指标基本是空的。**
