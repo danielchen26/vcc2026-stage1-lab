@@ -16,13 +16,46 @@
 
 | 错配 | 状态 |
 |---|---|
-| 基线定义（我们发明的「对照均值 tile 400 遍」vs 官方 generic-response） | **已用官方 b 列定量归因**（§5.2）；本地重建被内核 OOM 回收两次，见 §5.3 |
+| 基线定义（我们发明的「对照均值 tile 400 遍」vs 官方 generic-response） | **已用官方 b 列定量归因（b 列本身是 `inferred`）**（§5.2）；本地重建 **attempted ×3, not measured** —— 2 次内核 OOM、1 次空机器上 I/O 绑死，见 §5.3 |
 | 刻度形状（anchor 固定 0/1 vs 实测 replicate anchor r） | **已关闭并独立验证**（§2 代码路径、§4.1 用榜面自证、§4.2 分解） |
 | 8 扰动 / 1 context vs 300 扰动 / 3 context | **仍然存在**，§4 的两张表都带着它 |
 
 §4 的表是唯一能和 0.1899 并排的表，**它仍然不是同类比较**：分子（我们的 raw）来自 8 个
 扰动、1 个 context；分母（官方 b、r）来自 300 扰动 × 3 context 的官方 val bundle。
 §5.2 的归因表**不带**这个错配的第三条以外的成分：它比的是两个基线的原始值本身。
+
+---
+
+## 证据分三级（Main 要求：measured / inferred / 需要机器）
+
+所有 `avg_score` 一律注明刻度，**不取中点**。两把尺子只有两种：
+**(A) 仓库内 `from_baseline`** —— 0 端 = 对照均值 tile 400 遍的退化基线，anchor 固定 catalog 0/1；
+**(B) 官方两端 `(u−b)/(r−b)`** —— b、r 取 `docs/01-scoring.md:167-174`，区间两端各报一次。
+
+**① measured（本切片实测，可复现）**
+
+- V8 官方两端刻度 **0.1215 / 0.0848**，第一名 0.1899 ⇒ **未超过**（§4，尺 B）
+- 二因素分解：只换 anchor **+0.004…+0.015**（帮我们）；只换 baseline **−0.101…−0.118**（全部损失）（§4.2）
+- 刻度形状自证：第一名自己的 raw 复现他自己公布的 scaled，**6 项里 5 项 + 总分 0.1899 落在区间内**（§4.1）
+- `expr_mse` 的 0.5836 **恒等于** `1 − 1.08188/2.59845`；八个 variant 的 raw **全部 > 1.0**（过无技巧点）（§7）
+- 冻结刻度 `low-random_high-1_v10`：A **−0.0082**、V8 **+0.0996**（§3，第三把只读诊断尺）
+- 排序分歧归因：只换 baseline 时 V5 0.0865 **>** V6 0.0712；只换 anchor 时仍单调（§4「三步链」）
+- `build_generic_baseline` 的八项前置条件全绿；profile `n_excluded = 8/8`；`r_max = 23.0`；最大行和 20,431（§5.1）
+- 两条**逐字** scorer 警告，其中 `allow_fractional_counts` 那条来自**真实运行**（§5.1b）
+- anchor 只依赖 real 侧，一次算好可被所有 variant 复用（缓存键里没有任何预测项，§9）
+
+**② inferred（从 measured 推出，标注来源）**
+
+- 官方 b / r 全部来自**榜面反算**，非实测；§5.2 的「我们的基线在哪几项更弱」因此是 inferred
+- `mse` 的官方 b 端点存疑：四个角点都算不出公布的 0.041，反解得 b ≈ 0.9985（§4.1）
+- `reach` 约 5/6 是 MAT2A 伪影 —— **他人 measured**（SourceUnion），在本切片内属转述（§8.0）
+
+**③ 需要一台磁盘不满的机器（attempted, not measured）**
+
+- **本地重建官方 generic-response 基线**：尝试 3 次，2 次内核 OOM、1 次在空机器上 I/O 绑死
+  （wall 07:10 / CPU 00:02，320 GB 换页，卷剩 8 GB）。恢复命令见 §5.3
+- **本地 split-half replicate anchor**：主动终止，0/5 split 落盘；驱动可断点续跑，命令见 §8
+- 两者都**零 .h5ad 落盘**，不占磁盘；瓶颈是 RAM 与页换，不是字节
 
 ---
 
@@ -311,7 +344,7 @@ emission 诊断（**measured**）：`r_max = 23.0`、`r_median_nonzero = 1.00250
 `max_scaled_noncontrol_row_total = 20,418.93`、`n_rows = 3200`。
 profile 总和 20,005.5（我们把细胞 thin 到 20,000 UMI，吻合）。
 
-### 5.2b 代码路径的端到端 dry-run 与**逐字**的 scorer 警告（measured）
+### 5.1b 代码路径的端到端 dry-run 与**逐字**的 scorer 警告（measured）
 
 在把 25 分钟押上去之前，我用一个**合成 panel**（4 扰动 × 30 细胞 + 120 对照，300 基因，
 Poisson(3)）跑通了 `stage_baseline` 的**每一行**。结果：代码路径全程正常，
@@ -341,7 +374,13 @@ digest-exempt 的，所以 `score --baseline-agg` 的配对检查**看不到它*
 而它停下的那个位置正是一个**只有假数据才会撞上的守卫**。
 
 
-### 5.2 我们发明的退化基线 vs 官方 b 列：分母膨胀究竟在哪几项（measured）
+### 5.2 我们发明的退化基线 vs 官方 b 列：分母膨胀究竟在哪几项
+
+> **数据来源分级**：我们的退化基线原始值 = **measured**（`agg_base.parquet`）。
+> 官方 b 列 = **`inferred（榜面反算）`** —— 来自 `docs/01-scoring.md:167-174` 对实时榜的
+> 反算，不是我们实测的。两者相除得出的「强弱」判读因此是 `inferred`；把它升级为
+> `measured` 需要 §5.3 的本地重建（attempted, not measured）。
+> §4.1 已独立验证该 b/r 表在 6 项里 5 项 + 总分上自洽，唯一存疑项恰是 `mse` 的 b。
 
 官方 b 列取自 `docs/01-scoring.md:167-174`；我们的退化基线原始值取自
 `experiments/E27-six-metrics/out/agg_base.parquet`。这张表不需要本地重建基线就能给出结论。
@@ -368,29 +407,51 @@ preset 的取值）下，一个贴对照的臂测出来就是 **0.5000 —— "t
 **推论：V8 的 0.2025 里，真正在官方尺子上站得住的只有 pds 那一项；F25 的「78% 不是
 生物学」低估了 —— 按官方刻度算是 80% 来自单一指标，另外五项合计 0.0239。**
 
-### 5.3 本地重建官方基线（`build_generic_baseline`）—— 未完成，原因与代价
+### 5.3 本地重建官方基线 —— **attempted, not measured**（三次尝试，全部资源性失败）
 
-本地构建**两次被内核 OOM 回收**，不是代码失败：进程消失、日志 0 字节、无 traceback
-（SIGKILL 不 flush）。机制已定量（**measured**）：`sysctl vm.swapusage` 报
-`total = 34,816M  used = 33,662.94M  free = 1,153.06M`，而 swap 就住在只剩 3.5 GiB 的
-同一个卷上，内核无法扩 swap，于是回收 RSS 最大的进程。同一时刻项目里六个 python 进程的
-RSS 全部只有 22–171 MB —— 它们不是小，是**被整体换出**。
+**状态：尝试三次，无一完成；不是想法失败，也不是代码失败，是机器失败。**
 
-`build_generic_baseline` 的峰值内存无法压缩：`_materialize_reference` 必须把 real 全量读进
-内存（`baseline.py:62-83` 说明了为什么不能 backed —— `prep._grouped_means` 用
-`issparse(X)` 一次性决定稀疏分支，backed CSR 会让 `pseudobulk` 抛
-`ValueError: setting an array element with a sequence`），real 本身 138,532,377 个非零
-× (4B data + 4B indices) ≈ **1.11 GB**，预测是同尺寸的第二份，再加 `cache_strict=True`
-的严格内容哈希与 `compute_metrics` 的工作集，下限约 3 GB。
+| 次数 | 门槛条件 | 死法 | 诊断 |
+|---|---|---|---|
+| 1 | 无（首次启动，磁盘 23 → 14 GB） | 进程消失，日志 **0 字节**，无 traceback | SIGKILL 不 flush ⇒ 内核 OOM 回收 |
+| 2 | 同上，改 `-u` 无缓冲 | 同样消失 | 同上；此时 `swap free = 1,153M / 34,816M`，磁盘 3.5 GiB |
+| 3 | Main 修正后的门槛全绿：`memory_pressure` free **19%**、磁盘 **13 GiB**、重进程 < 2 | 被我按令终止 | **I/O bound**：wall 07:10 对 CPU **00:02**，RSS 2,822 MB，stdout 停在 15:08:11 |
 
-**未完成的只有「六个原始值的本地实测」这一项，而它不是本文件任何结论的前提**：§5.2 用
-官方 b 列已经给出了分母膨胀的定量归因，§4.1 已经独立验证了刻度，§6 已经用算术恒等式
-证明了 0.5836 是分母伪影。本地重建的价值是把官方 b 列从 `inferred`（榜面反算）升级为
-`measured`（我们自己的 panel 上实测），以及给出 V8/A 在官方基线上的 `from_baseline`。
+第 3 次是最有信息量的一次：它**不是**被内核杀的，它在**空机器上自己跑不动**。
+7 分钟消耗 2 秒 CPU（0.5% 利用率），进程状态 R（不是锁等待），全系统 pagein
+20,103,026 页 × 16 KB ≈ **320 GB 换页**，而数据卷 460 GB 里已用 401 GB、**只剩 8 GB**。
+`anndata` 读 1.11 GB 的 `real.h5ad` 与内核写 swap 争同一个近满的设备，
+**串行化救不了一个 I/O 绑死在满盘上的单进程**。
 
-复现它需要的全部条件已经验证通过（§5.1 的八项前置条件全绿，profile 与 emission 诊断都已
-实测），命令是 `python -u run_official_baseline.py baseline`，在 swap 空闲 > 2 GB 且磁盘
-> 8 GB 时单独跑，约 25 分钟，**零 .h5ad 落盘**。
+峰值内存无法压缩，这是库的结构性要求而非我的实现选择：`_materialize_reference` 必须把
+real 全量读进内存（`baseline.py:62-83` 写明了为什么不能 backed —— `prep._grouped_means`
+用 `issparse(X)` 一次性决定稀疏分支，backed CSR 会让 `pseudobulk` 抛
+`ValueError: setting an array element with a sequence`）。real 有 138,532,377 个非零
+× (4B data + 4B indices) ≈ **1.11 GB**，预测是同尺寸的第二份，加上
+`cache_strict=True` 的严格内容哈希与 `compute_metrics` 工作集，**下限约 3 GB**
+（第 3 次实测 RSS 已到 2,822 MB，与这个估计吻合）。
+
+**它本来只会升级一件事，而那件事不是本文件任何结论的前提。** 它会把 §5.2 的官方 b 列从
+`inferred（榜面反算）`升级为 `measured（我们自己 panel 上实测）`，并给出 V8/A 以官方基线
+为 0 端的 `from_baseline`。刻度形状已由 §4.1 用榜面自证独立验证；分母 vs anchor 的归因已由
+§4.2 分解定量；0.5836 的伪影性已由 §7 的算术恒等式证明。**这三条都不依赖本地重建。**
+
+**收获仍然是实的**：第 3 次在死前**真实地**打出了 §5.1b 那条 `allow_fractional_counts`
+警告（不是只在合成数据上），见 `out_baseline_stdout.log`；§5.1 的八项前置条件、profile
+（`n_excluded = 8/8`）与 emission 诊断（`r_max = 23.0`、最大行和 20,431）全部是这条路径上
+实测出来的。也就是说**除了最后的六个数字，这条路已经被走通并验证过了**。
+
+**恢复命令**（需要的唯一条件是一台磁盘不满的机器）：
+
+```bash
+cd experiments/E29-official-baseline
+python -u run_official_baseline.py baseline   # ~25 min，零 .h5ad 落盘
+python anchor_local.py rescore                # 自动检测 out/agg_official_base.parquet
+#   并额外打印：★ from_baseline（0 端 = 官方 generic 基线）、退化基线在官方基线上的分数、
+#   以及「官方 b / 退化 b / V8 raw」三列原始值对照
+```
+
+`stage_rescore` 已经写好并通过语法检查，会在 parquet 一出现时自动接上，不需要改任何代码。
 
 ---
 
@@ -457,6 +518,32 @@ clamp_low=0.0, clamp_high=1.0, decisive=True`。冻结刻度的 base = **1.0 = �
 ---
 
 ## 8 · 如果未来只能做一件事：修**比较器**，不是修 anchor
+
+### 8.0 V8 在官方刻度上到底靠什么得分（诚实的分项，含他人 measured 结果）
+
+把 §4 的表按「这一项是真的还是伪影」重读。前两列是本切片 measured；判读列的
+`reach` 依据是 SourceUnion 对 `de_wilcoxon_direction_reach_raw` 的 bit-exact 分解
+（其估计器已被 Main 验收：本地 0.1482 vs `cell_eval2` 0.1482，差 −0.0000），
+由 Main 转述，**在本切片之外 measured**。
+
+| 指标 | V8 官方刻度 (lo / hi) | 判读 |
+|---|---|---|
+| `pds_cosine` | **0.5855 / 0.5165** | **真的。** 它的 0 端可证明与官方相同（两边都恰好 0.500，`exclusion_scope="panel"` 让贴对照落在 floor 上，`competition.py:289`），所以这一项不是分母膨胀 |
+| `de_wilcoxon_direction_reach_raw` | 0.1110 / 0.0581 | **约 5/6 是伪影。** 0.1482 的原始值里 MAT2A 一个扰动贡献 0.1250（84.3%）：它的 confident pool 只有 5 个基因、且**不含我们召集的 288 个基因中的任何一个**，1.0000 来自解码器质量重整后系统性微负恰好对上 5 个全为负的参考 lfc —— **质量守恒，不是方向技巧** |
+| `expr_mse_unbiased_capped_norm` | 0.0000 / 0.0000 | **纯分母伪影且已被地板夹掉**（§7：0.5836 恒等于 `1 − 1.08188/2.59845`） |
+| `nmae` / `fid` / `jac` | 0.0009…0.0769 / −0.0972…0.0291 | 噪声，悲观端两项为负 |
+
+**结论：V8 在官方刻度上只在 `pds_cosine` 上得分，其余基本为零。**
+这修正了本文件早先的措辞：F25 的「78% 不是生物学」不只是低估，它**指错了对象** ——
+它归咎于 `expr_mse`（确实空），但 `reach` 同样空，而 `pds` 才是唯一真的。
+
+两个直接推论：
+
+1. **E34 想解耦的「reach ↔ pds 取舍」比看起来轻得多。** 如果 panel-mean 去均值「毁掉
+   reach」，它毁掉的是约 0.023 的真内容加约 0.125 的伪影 —— **用 reach 换 pds 很可能
+   直接就是对的**。跑 E34 的人应该把 MAT2A 排除后再看被保护的究竟是什么。
+2. **不要泛泛地保护 DE 指标。** 六项里四项在官方刻度上是噪声或被夹平。力气该花在
+   `pds_cosine` —— 它是我们所得分的 80%，也是唯一分母可信的一项。
 
 直说（依据是 §4.2 的分解，**measured**）：
 

@@ -1,0 +1,5 @@
+[1] max|m_full - _cpm_csr.mean(0)| = 0.000e+00   m_full.sum() = 1000000.1  (TS_CELL = 1000000)
+[2] HEAD 版 vs 新版(force_mean 默认 True) 逐位相同 = True
+[3] 列均值相对偏差 std（5198 个高表达基因）: force_mean=True 0.00020   force_mean=False 0.03487   倍数 173.2x
+
+三项全部通过

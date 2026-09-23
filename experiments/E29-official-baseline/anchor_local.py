@@ -324,6 +324,33 @@ def stage_rescore() -> None:
     for m in SCORED + ("avg_score",):
         print(f"{m:44s}" + "".join(f"{fb[k].get(m, float('nan')):9.4f}" for k in VARIANTS))
 
+    # 核心交付项：以**本地构建的官方 generic-response 基线**为 0 端，重算全家 from_baseline。
+    # 这是把 §5.2 的归因从「榜面反算的 b 列」升级为「我们自己 panel 上实测的 b」的那一步。
+    if OFF.exists():
+        print("\n" + "=" * 104)
+        print("★ from_baseline，0 端 = **本地构建的官方 generic-response 基线**"
+              "（anchor 仍为 catalog 0/1）")
+        print("=" * 104)
+        print(hdr); print("-" * len(hdr))
+        fo = {k: _from_baseline(v, OFF, f"fo_{k}") for k, v in VARIANTS.items()}
+        report["from_baseline_official_base"] = fo
+        for m in SCORED + ("avg_score",):
+            print(f"{m:44s}" + "".join(
+                f"{(fo[k].get(m) if fo[k].get(m) is not None else float('nan')):9.4f}"
+                for k in VARIANTS))
+        # 退化基线本身在官方基线上的得分 = 分母膨胀的直接度量
+        dv = _from_baseline(OLD, OFF, "old_vs_off")
+        report["degenerate_vs_official"] = dv
+        print("\n退化基线自己在官方基线上的 from_baseline（= 分母膨胀的直接度量）：")
+        for m in SCORED + ("avg_score",):
+            v = dv.get(m)
+            print(f"  {m:44s}{(v if v is not None else float('nan')):9.4f}")
+        print("\n六项原始值对照（官方基线 vs 退化基线 vs V8）：")
+        print(f"  {'指标':44s}{'官方 b':>12s}{'退化 b':>12s}{'V8 raw':>12s}")
+        for m in SCORED:
+            print(f"  {m:44s}{raw['off_base'][m]:12.5f}{raw['old_base'][m]:12.5f}"
+                  f"{raw['V8'][m]:12.5f}")
+
     # 冻结刻度：0 = 无技巧点，1 = 完美。不需要 bundle，也不需要任何实测基线。
     print("\n" + "=" * 104)
     print(f"冻结刻度 {FROZEN_SCALE}（0 = 无技巧点，1 = 完美；scales.py:310-452，无需 bundle）")

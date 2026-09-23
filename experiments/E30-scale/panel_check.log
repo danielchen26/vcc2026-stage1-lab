@@ -1,0 +1,39 @@
+len(cand) = 41
+
+N=8  indices [0, 6, 11, 17, 23, 29, 34, 40]
+     [np.str_('TCF7L2'), np.str_('GNG12'), np.str_('VCL'), np.str_('COX4I1'), np.str_('MAT2A'), np.str_('PAXIP1'), np.str_('SLIRP'), np.str_('ZNF581')]
+
+N=24 indices [0, 2, 3, 5, 7, 9, 10, 12, 14, 16, 17, 19, 21, 23, 24, 26, 28, 30, 31, 33, 35, 37, 38, 40]
+     [np.str_('TCF7L2'), np.str_('SMARCE1'), np.str_('PPP2R3C'), np.str_('DPH2'), np.str_('JAZF1'), np.str_('HMGCR'), np.str_('HTATSF1'), np.str_('NFE2L1'), np.str_('ARPC2'), np.str_('ACLY'), np.str_('COX4I1'), np.str_('HDAC8'), np.str_('TUSC3'), np.str_('MAT2A'), np.str_('DOT1L'), np.str_('HMGXB4'), np.str_('KRT18'), np.str_('SMARCB1'), np.str_('KLHDC2'), np.str_('CTSV'), np.str_('ITGAV'), np.str_('MGST1'), np.str_('PACSIN3'), np.str_('ZNF581')]
+
+superset? NO   missing from 24-panel: [np.str_('GNG12'), np.str_('VCL'), np.str_('PAXIP1'), np.str_('SLIRP')]
+overlap = 4/8
+
+E28 perts.csv on disk: ['TCF7L2', 'GNG12', 'VCL', 'COX4I1', 'MAT2A', 'PAXIP1', 'SLIRP', 'ZNF581']
+reproduces N=8 pick? True
+
+real cell counts (24-panel):
+  TCF7L2          484   <- also in 8-panel
+  SMARCE1         597
+  PPP2R3C         624
+  DPH2            670
+  JAZF1           709
+  HMGCR           843
+  HTATSF1         892
+  NFE2L1          926
+  ARPC2           980
+  ACLY           1026
+  COX4I1         1058   <- also in 8-panel
+  HDAC8          1204
+  TUSC3          1287
+  MAT2A          1428   <- also in 8-panel
+  DOT1L          1484
+  HMGXB4         1594
+  KRT18          1602
+  SMARCB1        1706
+  KLHDC2         1763
+  CTSV           1989
+  ITGAV          2034
+  MGST1          2096
+  PACSIN3        2101
+  ZNF581         2502   <- also in 8-panel

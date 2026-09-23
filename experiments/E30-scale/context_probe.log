@@ -1,0 +1,182 @@
+### manifest.json ###
+{
+  "season": "2026",
+  "partition": "val",
+  "panel_id": "vcc2026-val-1",
+  "contexts": [
+    "A",
+    "B",
+    "C"
+  ],
+  "pert_col": "target_gene",
+  "context_col": "context",
+  "control_label": "non-targeting",
+  "n_genes": 18533,
+  "n_constructs": 300,
+  "per_context": {
+    "A": {
+      "n_perturbations": 300,
+      "control_cells": 18400,
+      "ground_truth_cells": 138400,
+      "n_ntc_ids": 46
+    },
+    "B": {
+      "n_perturbations": 300,
+      "control_cells": 18400,
+      "ground_truth_cells": 138400,
+      "n_ntc_ids": 46
+    },
+    "C": {
+      "n_perturbations": 300,
+      "control_cells": 18400,
+      "ground_truth_cells": 138400,
+      "n_ntc_ids": 46
+    }
+  },
+  "cells_per_pert": 400
+}
+
+==============================================================================
+context_A: /Users/chetianc/vcc2026/context_A.h5ad
+  size 225 MB
+==============================================================================
+  root keys: ['X', 'layers', 'obs', 'obsm', 'obsp', 'uns', 'var', 'varm', 'varp']
+  X: sparse csr_matrix shape=(np.int64(18400), np.int64(18533)) nnz=109,910,478
+  var keys: ['_index']
+  n_var = None
+  obs columns: ['_index', 'context', 'ntc_id', 'target_gene']
+    - _index: <unreadable: Accessing a group is done with bytes or str, not <class 'slice'>>
+    - context: n_obs=18,400 n_categories=1
+        'A'                                   18,400
+    - ntc_id: n_obs=18,400 n_categories=46
+        top 6 of 46:
+        'non-targeting-99'                       400
+        'non-targeting-29'                       400
+        'non-targeting-52'                       400
+        'non-targeting-45'                       400
+        'non-targeting-44'                       400
+        'non-targeting-40'                       400
+        ... e.g. 'non-targeting' present: False
+    - target_gene: n_obs=18,400 n_categories=1
+        'non-targeting'                       18,400
+
+==============================================================================
+context_B: /Users/chetianc/vcc2026/context_B.h5ad
+  size 211 MB
+==============================================================================
+  root keys: ['X', 'layers', 'obs', 'obsm', 'obsp', 'uns', 'var', 'varm', 'varp']
+  X: sparse csr_matrix shape=(np.int64(18400), np.int64(18533)) nnz=101,546,777
+  var keys: ['_index']
+  n_var = None
+  obs columns: ['_index', 'context', 'ntc_id', 'target_gene']
+    - _index: <unreadable: Accessing a group is done with bytes or str, not <class 'slice'>>
+    - context: n_obs=18,400 n_categories=1
+        'B'                                   18,400
+    - ntc_id: n_obs=18,400 n_categories=46
+        top 6 of 46:
+        'non-targeting-99'                       400
+        'non-targeting-29'                       400
+        'non-targeting-52'                       400
+        'non-targeting-45'                       400
+        'non-targeting-44'                       400
+        'non-targeting-40'                       400
+        ... e.g. 'non-targeting' present: False
+    - target_gene: n_obs=18,400 n_categories=1
+        'non-targeting'                       18,400
+
+==============================================================================
+context_C: /Users/chetianc/vcc2026/context_C.h5ad
+  size 226 MB
+==============================================================================
+  root keys: ['X', 'layers', 'obs', 'obsm', 'obsp', 'uns', 'var', 'varm', 'varp']
+  X: sparse csr_matrix shape=(np.int64(18400), np.int64(18533)) nnz=108,213,983
+  var keys: ['_index']
+  n_var = None
+  obs columns: ['_index', 'context', 'ntc_id', 'target_gene']
+    - _index: <unreadable: Accessing a group is done with bytes or str, not <class 'slice'>>
+    - context: n_obs=18,400 n_categories=1
+        'C'                                   18,400
+    - ntc_id: n_obs=18,400 n_categories=46
+        top 6 of 46:
+        'non-targeting-99'                       400
+        'non-targeting-29'                       400
+        'non-targeting-52'                       400
+        'non-targeting-45'                       400
+        'non-targeting-44'                       400
+        'non-targeting-40'                       400
+        ... e.g. 'non-targeting' present: False
+    - target_gene: n_obs=18,400 n_categories=1
+        'non-targeting'                       18,400
+
+==============================================================================
+harness ground truth (adata_Validation): /Users/chetianc/code/vcc2026-stage1-lab/data/vcc2025/adata_Validation.h5ad
+  size 6929 MB
+==============================================================================
+  root keys: ['X', 'layers', 'obs', 'obsm', 'obsp', 'uns', 'var', 'varm', 'varp']
+  X: sparse csr_matrix shape=(np.int64(98927), np.int64(18080)) nnz=864,793,017
+  var keys: ['_index', 'log1p_mean_counts', 'log1p_total_counts', 'mean_counts', 'mt', 'n_cells', 'n_cells_by_counts', 'pct_dropout_by_counts', 'ribo', 'total_counts']
+  n_var = 18080
+  obs columns: ['_index', 'batch', 'guide_id', 'target_gene']
+    - _index: n_obs=98,927 n_categories=98927
+        top 6 of 98927:
+        np.str_('TTTGTGAGTTTGTAGCAAGTAGAG-Flex_1_07')         1
+        np.str_('CCCATTCGTCGAAGGTATTCGGTT-Flex_1_16')         1
+        np.str_('CCCATTCGTTTGAGCTAGCTGTGA-Flex_2_08')         1
+        np.str_('CCCATTCGTTTGTCAAACTTTAGG-Flex_2_01')         1
+        np.str_('CCCATTCGTTTGTCAAATTCGGTT-Flex_2_16')         1
+        np.str_('CCCGAACGTAAAGGCCACAGACCT-Flex_1_05')         1
+        ... e.g. 'non-targeting' present: False
+    - batch: n_obs=98,927 n_categories=48
+        top 6 of 48:
+        'Flex_3_02'                            2,319
+        'Flex_3_06'                            2,293
+        'Flex_3_15'                            2,282
+        'Flex_3_11'                            2,268
+        'Flex_3_10'                            2,267
+        'Flex_3_07'                            2,262
+        ... e.g. 'non-targeting' present: False
+    - guide_id: n_obs=98,927 n_categories=85
+        top 6 of 85:
+        'SH3BP4_P1P2_A|SH3BP4_P1P2_B'          2,925
+        'non-targeting_00027|non-targeting_00143'     2,749
+        'ANXA6_P1P2_A|ANXA6_P1P2_B'            2,496
+        'non-targeting_00095|non-targeting_03143'     2,243
+        'non-targeting_00057|non-targeting_00277'     2,231
+        'PACSIN3_P1P2_A|PACSIN3_P1P2_B'        2,101
+        ... e.g. 'non-targeting' present: False
+    - target_gene: n_obs=98,927 n_categories=51
+        top 6 of 51:
+        'non-targeting'                       38,176
+        'SH3BP4'                               2,925
+        'ZNF581'                               2,502
+        'ANXA6'                                2,496
+        'PACSIN3'                              2,101
+        'MGST1'                                2,096
+        ... e.g. 'non-targeting' present: True
+
+==============================================================================
+pert_counts.csv (head)
+==============================================================================
+  target_gene
+0       ABCD1
+1        ACLY
+2        ADNP
+3        AGO1
+4       AKAP1
+5     AKIRIN1
+6        AKT2
+7       ALG12
+8     ANKRD52
+9      ANKZF1
+  shape (300, 1)  columns ['target_gene']
+
+==============================================================================
+source-side perturbation pool ceiling
+==============================================================================
+  validation non-control target_gene categories : 50
+  K562GW source columns (nadig2025)             : 9866
+  intersection (usable)                         : 47
+  ... and >= 400 real cells (cand)          : 41
+  leaderboard scale (manifest n_constructs)     : 300
+
+wrote context_evidence.json

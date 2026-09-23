@@ -1,0 +1,43 @@
+metric 'expr_distance_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased_capped' not scored (scored=False)
+metric 'expr_real_mass_ratio' not scored (scored=False)
+metric 'expr_distance_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased_capped' not scored (scored=False)
+metric 'expr_real_mass_ratio' not scored (scored=False)
+metric 'expr_distance_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased_capped' not scored (scored=False)
+metric 'expr_real_mass_ratio' not scored (scored=False)
+metric 'expr_distance_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased_capped' not scored (scored=False)
+metric 'expr_real_mass_ratio' not scored (scored=False)
+!! 缺 /Users/chetianc/code/vcc2026-stage1-lab/experiments/E32-lambda/out/agg_v12.parquet，跳过 V12
+
+### 三旋钮标注（混淆一目了然）
+变体    ordering  K 规则      lambda    内部 avg    官方 lo    官方 hi
+V5    |beta|    29/288/G    1.00    0.1559   0.1028   0.0675
+V6    |beta|    29/288/G    0.50    0.1762   0.0909   0.0552
+V7    |beta|    288 flat    0.50    0.1873   0.1041   0.0668
+V8    |beta|    288 flat    0.70    0.2025   0.1215   0.0848
+
+### 原始均值
+变体         reach     capped        lfc        pds        sig      yield
+V5        0.1487     1.5772     1.0141     0.7143     0.0483     0.4898
+V6        0.0204     1.0347     0.9882     0.7143     0.0484     0.4978
+V7        0.0219     1.0425     0.9885     0.7500     0.0484     0.4963
+V8        0.1482     1.0819     1.0004     0.7500     0.0482     0.4919
+
+### 内部 from_baseline（逐指标）
+V5        0.1424     0.3930    -0.0164     0.4286     0.0008    -0.0129
+V6        0.0132     0.6018     0.0096     0.4286     0.0010     0.0032
+V7        0.0147     0.5988     0.0092     0.5000     0.0009     0.0000
+V8        0.1419     0.5836    -0.0026     0.5000     0.0007    -0.0087
+
+### 官方尺度逐指标（lo / hi）
+V5    +0.1116/+0.0586 +0.0000/+0.0000 -0.0209/-0.0217 +0.5018/+0.4427 +0.0770/+0.0292 -0.0526/-0.1040
+V6    -0.0291/-0.0869 +0.0000/+0.0000 +0.0201/+0.0237 +0.5018/+0.4427 +0.0775/+0.0296 -0.0247/-0.0780
+V7    -0.0276/-0.0853 +0.0000/+0.0000 +0.0196/+0.0231 +0.5855/+0.5165 +0.0774/+0.0295 -0.0302/-0.0830
+V8    +0.1110/+0.0581 +0.0000/+0.0000 +0.0009/+0.0023 +0.5855/+0.5165 +0.0769/+0.0291 -0.0453/-0.0972
