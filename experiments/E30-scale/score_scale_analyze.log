@@ -1,0 +1,79 @@
+per-pert frame: 71 rows, pert column 'perturbation', 8 perturbations
+perturbations: ['COX4I1', 'GNG12', 'MAT2A', 'PAXIP1', 'SLIRP', 'TCF7L2', 'VCL', 'ZNF581']
+metrics present per-perturbation: ['de_wilcoxon_direction_fidelity_yield_raw', 'de_wilcoxon_direction_reach_raw', 'de_wilcoxon_lfc_nmae', 'de_wilcoxon_sig_jaccard', 'expr_distance_unbiased', 'expr_mse_unbiased', 'expr_mse_unbiased_capped', 'expr_real_mass_ratio', 'pds_cosine']
+scored metrics WITHOUT per-perturbation rows (derived): ['expr_mse_unbiased_capped_norm']
+
+reproduction check vs E28 agg_v8.parquet              mine        E28 V8    abs diff
+------------------------------------------------------------------------------------
+de_wilcoxon_sig_jaccard                           0.048234      0.048234    0.00e+00
+de_wilcoxon_lfc_nmae                              1.000361      1.000361    0.00e+00
+de_wilcoxon_direction_fidelity_yield_raw          0.491874      0.491874    0.00e+00
+de_wilcoxon_direction_reach_raw                   0.148158      0.148158    0.00e+00
+pds_cosine                                        0.750000      0.750000    0.00e+00
+expr_mse_unbiased_capped_norm                     1.081883      1.081883    0.00e+00
+------------------------------------------------------------------------------------
+worst abs diff 0.00e+00  -> IDENTICAL (bit-for-bit)
+
+full 8-panel point estimates
+  repo6                     0.2025
+  repo5                     0.1430
+  off6 b_lo/r_lo            0.1215
+  off5 b_lo/r_lo            0.0287
+  off6 b_hi/r_hi            0.0848
+  off5 b_hi/r_hi           -0.0015
+  -> reproduces V8's repo-internal 0.2025 and official 0.1215/0.0848
+
+per-perturbation raw values (derived metrics absent by construction)
+perturbation de_wilcoxon_sig_jaccar   de_wilcoxon_lfc_nmae de_wilcoxon_direction_ de_wilcoxon_direction_             pds_cosine
+--------------------------------------------------------------------------------------------------------------------------------
+COX4I1                       0.0122                 0.9671                 0.4838                 0.0574                 0.8571
+GNG12                        0.0606                 1.0081                 0.4983                 0.0033                 0.2857
+MAT2A                        0.0006                    nan                 0.5174                 1.0000                 0.7143
+PAXIP1                       0.2527                 1.0077                 0.4437                 0.0006                 1.0000
+SLIRP                        0.0239                 1.0322                 0.5276                 0.0435                 1.0000
+TCF7L2                       0.0265                 1.0110                 0.4696                 0.0000                 0.4286
+VCL                          0.0081                 1.0026                 0.4889                 0.0180                 0.8571
+ZNF581                       0.0012                 0.9738                 0.5057                 0.0625                 0.8571
+--------------------------------------------------------------------------------------------------------------------------------
+panel mean                   0.0482                 1.0004                 0.4919                 0.1482                 0.7500
+
+reach concentration: total 1.1853 over 8 perturbations; largest single contributor MAT2A = 1.0000 (84.4% of the total); 1 of 8 are exactly 0
+  bootstrap 250/2000 (1s)
+  bootstrap 500/2000 (2s)
+  bootstrap 750/2000 (3s)
+  bootstrap 1000/2000 (4s)
+  bootstrap 1250/2000 (5s)
+  bootstrap 1500/2000 (6s)
+  bootstrap 1750/2000 (7s)
+  bootstrap 2000/2000 (8s)
+
+=======================================================================================
+sampling error of V8's avg_score over the choice of 8 perturbations
+(bootstrap B=2000, seed 20260922, baseline b FIXED)
+=======================================================================================
+quantity                       point  boot mean   boot sd        p5       p95   jack sd
+---------------------------------------------------------------------------------------
+repo6                         0.2025     0.1963    0.0348    0.1418    0.2552    0.0369  CONTAMINATED (incl pds)
+repo5                         0.1430     0.1371    0.0320    0.0741    0.1771    0.0246  clean (5 metrics)
+off6 b_lo/r_lo                0.1215     0.1342    0.0423    0.0680    0.2022    0.0441  CONTAMINATED (incl pds)
+off5 b_lo/r_lo                0.0287     0.0458    0.0321   -0.0002    0.0973    0.0311  clean (5 metrics)
+off6 b_hi/r_hi                0.0848     0.0984    0.0395    0.0379    0.1605    0.0409  CONTAMINATED (incl pds)
+off5 b_hi/r_hi               -0.0015     0.0163    0.0330   -0.0314    0.0684    0.0323  clean (5 metrics)
+---------------------------------------------------------------------------------------
+
+per-perturbation jackknife (leave-one-out), official b_lo/r_lo 6-metric:
+  drop COX4I1     ->  0.1195  (-0.0020)
+  drop GNG12      ->  0.1502  (+0.0287)
+  drop MAT2A      ->  0.1023  (-0.0192)
+  drop PAXIP1     ->  0.1019  (-0.0196)
+  drop SLIRP      ->  0.1205  (-0.0011)
+  drop TCF7L2     ->  0.1471  (+0.0256)
+  drop VCL        ->  0.1220  (+0.0005)
+  drop ZNF581     ->  0.1186  (-0.0029)
+
+leader comparison, official b_lo/r_lo scale (the decision-grade one):
+  V8 point 0.1215   leader 0.1899   gap -0.0684
+  bootstrap P(V8 > leader) = 0.0885   90% interval [0.0680, 0.2022]
+  -> NOT separated
+
+wrote analyze.json + bootstrap.parquet; elapsed 8s

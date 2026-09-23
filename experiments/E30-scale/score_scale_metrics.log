@@ -6,3 +6,6 @@
   scores = (
 /Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
   scores = (
+de_lfc_nmae: omitted 1 perturbation(s) for fewer than 10 gated genes (e.g. MAT2A). The gate is real-side only, so this set is the same for every submission.
+pred_8: compute_metrics + aggregate done (1530s); per-pert rows 71; schema {'perturbation': String, 'metric': String, 'value': Float64}
+  cleaned pred_8.h5ad (292 MB)

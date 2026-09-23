@@ -1,0 +1,31 @@
+{
+  "core_members": [
+    "de_wilcoxon_sig_jaccard",
+    "de_wilcoxon_lfc_nmae",
+    "de_wilcoxon_direction_fidelity_yield_raw",
+    "expr_mse_unbiased_capped_norm"
+  ],
+  "excluded": {
+    "pds_cosine": "panel-relative (E30 scale warning)",
+    "de_wilcoxon_direction_reach_raw": "MAT2A renorm coincidence (F35)"
+  },
+  "core4": {
+    "V8": {
+      "b_lo/r_lo": 0.008131554934818855,
+      "b_hi/r_hi": -0.016431945742929596
+    },
+    "V13": {
+      "b_lo/r_lo": 0.012731504189214263,
+      "b_hi/r_hi": -0.01288875241703833
+    },
+    "V14": {
+      "b_lo/r_lo": 0.013670180849790714,
+      "b_hi/r_hi": -0.011263590441231014
+    }
+  },
+  "v8_core4_lo_boot_sd": 0.03888399046308038,
+  "v8_core4_lo_p5_p95": [
+    -0.008623894700784363,
+    0.09595496985844552
+  ]
+}
