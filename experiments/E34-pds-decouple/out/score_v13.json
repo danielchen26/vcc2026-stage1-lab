@@ -1,0 +1,48 @@
+{
+  "raw": {
+    "de_wilcoxon_direction_fidelity_yield_raw": 0.5023320159448118,
+    "de_wilcoxon_direction_reach_raw": 0.02502093925233683,
+    "de_wilcoxon_lfc_nmae": 1.0115425496656136,
+    "de_wilcoxon_sig_jaccard": 0.04824670881234551,
+    "expr_distance_unbiased": 0.0012076977064417775,
+    "expr_mse_unbiased": 0.0026057171932000176,
+    "expr_mse_unbiased_capped": 0.0026820842845493124,
+    "expr_mse_unbiased_capped_norm": 2.220824193209325,
+    "expr_real_mass_ratio": 1.0,
+    "pds_cosine": 0.875
+  },
+  "official_lo": {
+    "pds_cosine": 0.8782201405152223,
+    "expr_mse_unbiased_capped_norm": 0.0,
+    "de_wilcoxon_sig_jaccard": 0.07696810398967659,
+    "de_wilcoxon_lfc_nmae": -0.01684214221492919,
+    "de_wilcoxon_direction_fidelity_yield_raw": -0.009199945017890341,
+    "de_wilcoxon_direction_reach_raw": -0.024126301589092396
+  },
+  "official_hi": {
+    "pds_cosine": 0.7747933884297521,
+    "expr_mse_unbiased_capped_norm": 0.0,
+    "de_wilcoxon_sig_jaccard": 0.029136551327319977,
+    "de_wilcoxon_lfc_nmae": -0.01724645114002743,
+    "de_wilcoxon_direction_fidelity_yield_raw": -0.06344510985544587,
+    "de_wilcoxon_direction_reach_raw": -0.08170154454899338
+  },
+  "avg_lo": 0.15083664261383117,
+  "avg_hi": 0.1069228057021009,
+  "internal": {
+    "de_wilcoxon_lfc_nmae": -0.01383587707979661,
+    "expr_mse_unbiased_capped_norm": 0.14532887394543814,
+    "de_wilcoxon_direction_fidelity_yield_raw": 0.012101437060733721,
+    "de_wilcoxon_direction_reach_raw": 0.01783249998462878,
+    "de_wilcoxon_sig_jaccard": 0.0007629247298831406,
+    "pds_cosine": 0.75,
+    "avg_score": 0.15203164310681452
+  },
+  "halts": [
+    "停止条件 2 触发：de_wilcoxon_sig_jaccard 变了（0.048234 -> 0.048247）—— lfc_all 影响了显著性通道，decoder 的两通道分离是假的。**这比 pds 输掉严重**",
+    "停止条件 2 触发：de_wilcoxon_direction_reach_raw 变了（0.148158 -> 0.025021）—— lfc_all 影响了显著性通道，decoder 的两通道分离是假的。**这比 pds 输掉严重**"
+  ],
+  "verdict": "GO",
+  "k_off": 550,
+  "lambda_off": 1.0
+}
