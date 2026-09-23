@@ -1,0 +1,16 @@
+=== stage=build ===
+gate 10,779  对照 18,400  MDE 中位 0.0149
+选中 8 个扰动: [np.str_('TCF7L2'), np.str_('GNG12'), np.str_('VCL'), np.str_('COX4I1'), np.str_('MAT2A'), np.str_('PAXIP1'), np.str_('SLIRP'), np.str_('ZNF581')]
+共同基因 7,016
+  TCF7L2     n_src=    1 K=  288 |R̂|=  288  真实细胞   484
+  GNG12      n_src=    5 K=  288 |R̂|=  288  真实细胞   677
+  VCL        n_src=    1 K=  288 |R̂|=  288  真实细胞   894
+  COX4I1     n_src=   12 K=  288 |R̂|=  288  真实细胞  1058
+  MAT2A      n_src=   82 K=  288 |R̂|=  288  真实细胞  1428
+  PAXIP1     n_src=   38 K=  288 |R̂|=  288  真实细胞  1644
+  SLIRP      n_src=   10 K=  288 |R̂|=  288  真实细胞  2000
+  ZNF581     n_src=    1 K=  288 |R̂|=  288  真实细胞  2502
+  df immediately before writing pred_8: 11.2 GB free
+pred_8.h5ad  (21600, 18080)  292 MB
+
+build 完成 198s

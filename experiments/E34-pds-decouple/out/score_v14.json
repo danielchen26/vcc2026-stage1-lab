@@ -1,0 +1,51 @@
+{
+  "raw": {
+    "de_wilcoxon_direction_fidelity_yield_raw": 0.4980137510127237,
+    "de_wilcoxon_direction_reach_raw": 0.02075197059205722,
+    "de_wilcoxon_lfc_nmae": 1.0004724624952939,
+    "de_wilcoxon_sig_jaccard": 0.04864550493159414,
+    "expr_distance_unbiased": 0.0012076977064417775,
+    "expr_mse_unbiased": 0.0015368216590634855,
+    "expr_mse_unbiased_capped": 0.001614209232232409,
+    "expr_mse_unbiased_capped_norm": 1.3366003956307335,
+    "expr_real_mass_ratio": 1.0,
+    "pds_cosine": 0.7857142857142857
+  },
+  "official_lo": {
+    "pds_cosine": 0.669120107059217,
+    "expr_mse_unbiased_capped_norm": 0.0,
+    "de_wilcoxon_sig_jaccard": 0.07809464669941849,
+    "de_wilcoxon_lfc_nmae": 0.0006765904489729468,
+    "de_wilcoxon_direction_fidelity_yield_raw": -0.02409051374922858,
+    "de_wilcoxon_direction_reach_raw": -0.028812326463164416
+  },
+  "official_hi": {
+    "pds_cosine": 0.5903187721369539,
+    "expr_mse_unbiased_capped_norm": 0.0,
+    "de_wilcoxon_sig_jaccard": 0.030169701895321612,
+    "de_wilcoxon_lfc_nmae": 0.0021509330729037046,
+    "de_wilcoxon_direction_fidelity_yield_raw": -0.07737499673314938,
+    "de_wilcoxon_direction_reach_raw": -0.0865471389420463
+  },
+  "avg_lo": 0.1158314173325359,
+  "avg_hi": 0.07645287857166393,
+  "internal": {
+    "de_wilcoxon_lfc_nmae": -0.002740692265889244,
+    "expr_mse_unbiased_capped_norm": 0.48561720071687875,
+    "de_wilcoxon_direction_fidelity_yield_raw": 0.003529441558753071,
+    "de_wilcoxon_direction_reach_raw": 0.013532056574597483,
+    "de_wilcoxon_sig_jaccard": 0.0011816171279202554,
+    "pds_cosine": 0.5714285714285714,
+    "avg_score": 0.17875803252347197
+  },
+  "mech_gate_pass": false,
+  "score_gate_pass": false,
+  "halts": [
+    "停止条件 2：sig_jaccard 相对 V8 变了 4.11e-04 > 2e-5 —— 敞口比 V13 观察到的更大，需单独定位",
+    "停止条件 1：不变量已在 build 内断言通过，但 reach 仍未恢复 —— 纯前缀还有第三个来源，SPEC §8a 仍不完整"
+  ],
+  "verdict": "机制未成立 —— 回头改 §8a",
+  "k_off": 550,
+  "lambda_off": 1.0,
+  "cap_margin": 0.99
+}
