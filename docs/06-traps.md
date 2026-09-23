@@ -231,6 +231,40 @@ MAT2A 两行分别是 $n_{\text{sig}}$ = **5** 和 **41**。
 教训是：**标了警告，然后去检查警告，却没检查行选择。**
 带 `mode` / `split` / `arm` 这类列的表，取值之前先 `assert` 行数和筛选条件。
 
+## T14 · 代理量对「指标真正排序的那个键」是瞎的 `我们真的犯了`
+
+[T13](#t13) 是**行**选错了。这一条更深：代理量算的**列**根本不在指标的排序键里。
+
+`cap_probe.py` 为 V14 做前置判定，走 `_pred_bulk_closed` —— **闭式 pseudobulk，
+不生成细胞**。于是它能量的只有幅度。它报「不变量 8/8 通过，pds +6 量子」，
+据此 V14 拿到绿灯、SPEC §8d 写下 `reach` 预测 0.1482。
+
+而 `cell_eval2/metrics/direction.py:508-511` 的排序键是：
+
+```python
+.sort(["target", "_sig_pred", "rank_p_adj", "rank_p_value", "abs_lfc_pred", "feature"],
+      descending=[False, True, False, False, True, False])
+```
+
+`abs_lfc_pred` 排**第 4**。主导量是 `_sig_pred` 与 `rank_p_adj` —— 打分器**从我们提交的
+计数里自己重算**的 p 值。没有细胞就没有 p 值，所以那个探针**结构上不可能**判出 reach。
+实测代价：V14 一次 build + 一次官方打分 = 1,835 s，换来 `reach` 0.0250 → **0.0208**（更低）。
+
+两条不对称的教训：
+
+1. **闭式探针只在指标是一阶矩的函数时可信。** `pds` / `mse` / `lfc_nmae` 读均值，闭式够用；
+   `direction_*` / `sig_jaccard` 读的是**重算出来的 p 值**，闭式一律不可用。
+   分界线不是「快慢」，是**指标读不读我们没提交的那个量**。
+2. **写探针之前先去读指标的 `sort` 那一行。** 这次只要读到第 508 行就能省掉整个 V14。
+   探针的合法性 = 它算的量与指标排序键的交集，不是它跑得多快。
+
+反过来的正面做法（本轮补上的）：
+[`reach_probe.py`](../experiments/E34-pds-decouple/reach_probe.py) 生成细胞、跑
+`ControlRef.de_table`（cell-eval2 wilcoxon 的精确复刻）、再照 `_purity_curve` / `_k_star`
+复现 $k^\ast/N_{\text{conf}}$ —— **并且先用三个已知官方值证明自己**
+（V8 0.1482 / V13 0.0250 / V14 0.0208，全部逐位命中）才拿去筛设计。
+**代理量必须先复现已知值，再用于决策。**
+
 ## 附：迭代纪律（不是坑，但同等重要）
 
 | 事项 | 纪律 |

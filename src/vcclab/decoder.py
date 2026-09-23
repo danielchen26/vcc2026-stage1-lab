@@ -74,7 +74,7 @@ def design_cells(
     r_set,
     lfc,
     n_cells: int = 400,
-    shift: float = 0.10,
+    shift: float | np.ndarray = 0.10,
     seed: int = 0,
     lfc_all=None,
     quantizer: str = "hamilton",
@@ -111,6 +111,23 @@ def design_cells(
     tgt, 但抽样子集相对总体的偏差原样保留 —— 正是打分器要找的那份波动 (诚实提交
     量约 1.0). `ref.m_full` 即 scorer.py 第 89 行 `cpm.mean(0)`, 全 n_ctrl 个对照细胞
     的全基因 CPM 总体均值, 与 tgt 同尺度 (tgt = m_full * 2**lf 后重归一到 1e6).
+
+    `shift` 可以是标量 (现状, 所有既有调用方逐位不变) 或长度 `len(r_set)` 的向量,
+    逐基因给出各自的 psi_bar 目标 `0.5 + sign(l) * shift[i]`. 这是唯一能把我们自己的
+    置信度送进**打分器实际排序的那个通道**的口子:
+    `cell_eval2/metrics/direction.py:508-511` 的排序键是
+    `(_sig_pred desc, rank_p_adj asc, rank_p_value asc, abs_lfc_pred desc, feature asc)`
+    —— `|lfc|` 只排第 4 位, 主导量是打分器自己重算的 p 值, 而 p 值由 psi_bar 决定
+    (`scorer.py:112-114`: psi 是 Wilcoxon 的充分统计量). 标量 shift 意味着 288 个召集集
+    基因的 AUC 目标全同, 于是头部次序与置信度无关 —— 而 `direction_reach` 的 k* 几乎
+    完全由头部决定 (`direction.py:946-949`), k* >= 1 的充分条件是第一条命中.
+    `docs/05-stage1-design.md:43` 要求的「排序键按 P(h in R_p) 降序」就落在这里.
+
+    ⚠️ **实测: 这个旋钮是平的, 不要再试.** 按源侧 Wald z = |beta|/SE 单调地铺 shift
+    (7 个斜坡点, hi+lo=0.20 使均值恒为 0.10, 即只改次序不改显著性总量), `reach` 只动
+    +0.0001 ~ +0.0009 (F35 ④). 原因不是通道不通, 是头部本来就命中: V8 基准已经
+    top1 命中 7/8, 瓶颈在**深度** —— purity 门 0.90 对上 ~0.52 的逐基因符号可迁移性,
+    k* 被封在个位数. 保留这个参数只为让 F35 的那次测量可复现.
     """
     rg = np.random.default_rng(seed)
     r_set = np.asarray(r_set)
@@ -137,9 +154,10 @@ def design_cells(
     else:
         V *= tgt / np.maximum(ref.m_full, 1e-12)         # 只平移总体均值, 保留波动
 
-    for j, l in zip(r_set, lfc):
+    sh = np.broadcast_to(np.asarray(shift, dtype=float), (r_set.size,))
+    for i, (j, l) in enumerate(zip(r_set, lfc)):
         mu = tgt[ref.gidx[j]]
-        ut = 0.5 + np.sign(l) * shift
+        ut = 0.5 + np.sign(l) * sh[i]
         lo, hi = 1.0 / n_cells, 1.0
         for _ in range(24):                       # psi_bar 对 f 单调 -> 二分
             f = 0.5 * (lo + hi)
