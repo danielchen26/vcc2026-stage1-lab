@@ -1,0 +1,52 @@
+可用磁盘 11.3 GB
+=== stage=build ===
+gate 10,779  对照 18,400  MDE 中位 0.0149
+选中 8 个扰动: [np.str_('TCF7L2'), np.str_('GNG12'), np.str_('VCL'), np.str_('COX4I1'), np.str_('MAT2A'), np.str_('PAXIP1'), np.str_('SLIRP'), np.str_('ZNF581')]
+共同基因 7,016
+  TCF7L2     n_src=    1 K=  288 |R̂|=  288  真实细胞   484
+  GNG12      n_src=    5 K=  288 |R̂|=  288  真实细胞   677
+  VCL        n_src=    1 K=  288 |R̂|=  288  真实细胞   894
+  COX4I1     n_src=   12 K=  288 |R̂|=  288  真实细胞  1058
+  MAT2A      n_src=   82 K=  288 |R̂|=  288  真实细胞  1428
+  PAXIP1     n_src=   38 K=  288 |R̂|=  288  真实细胞  1644
+  SLIRP      n_src=   10 K=  288 |R̂|=  288  真实细胞  2000
+  ZNF581     n_src=    1 K=  288 |R̂|=  288  真实细胞  2502
+pred_v8.h5ad  (21600, 18080)  277 MB
+
+build 完成 128s
+产物 /Users/chetianc/code/vcc2026-stage1-lab/experiments/E31-iid/out/pred_v9.h5ad  277 MB
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+INFO cell_eval2.metrics.de: de_lfc_nmae: excluded the perturbed gene's own row from the real (gate) side -- 8 row(s) removed of 4571, over 8/8 targets resolved to a measured gene (issue #172).
+WARNING cell_eval2.metrics.de: de_lfc_nmae: omitted 1 perturbation(s) for fewer than 10 gated genes (e.g. MAT2A). The gate is real-side only, so this set is the same for every submission.
+INFO cell_eval2.metrics.de: de_sig_jaccard: excluded the perturbed gene's own row from the real side -- 8 row(s) removed of 4571, over 8/8 targets resolved to a measured gene (issue #172).
+INFO cell_eval2.metrics.de: de_sig_jaccard: excluded the perturbed gene's own row from the pred side -- 8 row(s) removed of 6519, over 8/8 targets resolved to a measured gene (issue #172).
+INFO cell_eval2.metrics.delta: expr_mse_unbiased_capped: capped the prediction's sampling correction (comparator=bulk_lognorm) at 1x the real side's on 8 of 8 perturbations (issue #247)
+INFO cell_eval2.metrics.delta: expr_mse_unbiased_capped: scaled the prediction's sampling correction (comparator=bulk_lognorm) to 0.952x on all 8 perturbations -- it claimed 0.006544 against an across-perturbation budget of 0.00623 (issue #348)
+INFO cell_eval2.run: peak host RSS at end of compute_metrics attempt: 3.06 GiB (pred 21600x18080, real 21600x18080). Reported whether the run SUCCEEDED or raised -- it is in a finally, so an OOM-adjacent failure still reports the high-water mark it reached, which is the number #277 is about. Process high-water mark (ru_maxrss), so it covers this run AND anything the caller allocated before it -- the number to compare against a job's --mem, not a per-call allocation. #277: the in-memory driver has no documented host-memory envelope, and the pre-v0.8.0 peak on the largest VCC Test submissions was 126.53 GiB against 128 GiB.
+compute_metrics 完成 2237s
+WARNING cell_eval2.score: metric 'expr_distance_unbiased' not scored (scored=False)
+WARNING cell_eval2.score: metric 'expr_mse_unbiased' not scored (scored=False)
+WARNING cell_eval2.score: metric 'expr_mse_unbiased_capped' not scored (scored=False)
+WARNING cell_eval2.score: metric 'expr_real_mass_ratio' not scored (scored=False)
+
+指标                                                 原始  from_baseline
+----------------------------------------------------------------------
+de_wilcoxon_sig_jaccard                        0.0116        -0.0377
+de_wilcoxon_lfc_nmae                           0.9942         0.0036
+de_wilcoxon_direction_fidelity_yield_raw       0.4259        -0.1396
+de_wilcoxon_direction_reach_raw                0.1650         0.1588
+pds_cosine                                     0.7679         0.5357
+expr_mse_unbiased_capped_norm                  1.7156         0.3398
+----------------------------------------------------------------------
+avg_score                                                     0.1434
+V8 基准 0.2025  差 -0.0591；领先者 0.1899  差 -0.0465
+耗时 2237s
+已清理 pred_v9.h5ad（277 MB）；结果保留在 agg_v9.parquet
+日志 /Users/chetianc/code/vcc2026-stage1-lab/experiments/E31-iid/out/log_v9.txt

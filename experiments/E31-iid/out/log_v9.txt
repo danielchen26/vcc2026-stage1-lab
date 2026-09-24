@@ -1,0 +1,11 @@
+INFO cell_eval2.metrics.de: de_lfc_nmae: excluded the perturbed gene's own row from the real (gate) side -- 8 row(s) removed of 4571, over 8/8 targets resolved to a measured gene (issue #172).
+WARNING cell_eval2.metrics.de: de_lfc_nmae: omitted 1 perturbation(s) for fewer than 10 gated genes (e.g. MAT2A). The gate is real-side only, so this set is the same for every submission.
+INFO cell_eval2.metrics.de: de_sig_jaccard: excluded the perturbed gene's own row from the real side -- 8 row(s) removed of 4571, over 8/8 targets resolved to a measured gene (issue #172).
+INFO cell_eval2.metrics.de: de_sig_jaccard: excluded the perturbed gene's own row from the pred side -- 8 row(s) removed of 6519, over 8/8 targets resolved to a measured gene (issue #172).
+INFO cell_eval2.metrics.delta: expr_mse_unbiased_capped: capped the prediction's sampling correction (comparator=bulk_lognorm) at 1x the real side's on 8 of 8 perturbations (issue #247)
+INFO cell_eval2.metrics.delta: expr_mse_unbiased_capped: scaled the prediction's sampling correction (comparator=bulk_lognorm) to 0.952x on all 8 perturbations -- it claimed 0.006544 against an across-perturbation budget of 0.00623 (issue #348)
+INFO cell_eval2.run: peak host RSS at end of compute_metrics attempt: 3.06 GiB (pred 21600x18080, real 21600x18080). Reported whether the run SUCCEEDED or raised -- it is in a finally, so an OOM-adjacent failure still reports the high-water mark it reached, which is the number #277 is about. Process high-water mark (ru_maxrss), so it covers this run AND anything the caller allocated before it -- the number to compare against a job's --mem, not a per-call allocation. #277: the in-memory driver has no documented host-memory envelope, and the pre-v0.8.0 peak on the largest VCC Test submissions was 126.53 GiB against 128 GiB.
+WARNING cell_eval2.score: metric 'expr_distance_unbiased' not scored (scored=False)
+WARNING cell_eval2.score: metric 'expr_mse_unbiased' not scored (scored=False)
+WARNING cell_eval2.score: metric 'expr_mse_unbiased_capped' not scored (scored=False)
+WARNING cell_eval2.score: metric 'expr_real_mass_ratio' not scored (scored=False)
