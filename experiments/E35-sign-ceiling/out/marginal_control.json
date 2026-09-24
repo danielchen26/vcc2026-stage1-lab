@@ -1,0 +1,46 @@
+{
+  "同系（K562，两次不同筛）": {
+    "pair": "K562GW->K562Essential",
+    "n_scored": 1289,
+    "actual": 0.9148360480930363,
+    "permuted": 0.5662081899644269,
+    "habitual": 0.7057802944053776,
+    "specific": 0.3486278581286093,
+    "specific_sd": 0.10602424933257452,
+    "t_specific": 118.05471582622735,
+    "frac_specific_positive": 0.9930178432893716
+  },
+  "跨系 K562→Jurkat": {
+    "pair": "K562GW->JurkatEssential",
+    "n_scored": 1435,
+    "actual": 0.8243825401254049,
+    "permuted": 0.563587520822786,
+    "habitual": 0.6809718093333522,
+    "specific": 0.26079501930261906,
+    "specific_sd": 0.1180330319489026,
+    "t_specific": 83.69927195069347,
+    "frac_specific_positive": 0.9686411149825784
+  },
+  "跨系 K562→RPE1": {
+    "pair": "K562GW->RPE1Essential",
+    "n_scored": 1963,
+    "actual": 0.6695405492076317,
+    "permuted": 0.5624050594571405,
+    "habitual": 0.6564873833862863,
+    "specific": 0.10713548975049118,
+    "specific_sd": 0.146946209414238,
+    "t_specific": 32.302424601057595,
+    "frac_specific_positive": 0.7778909831889964
+  },
+  "跨系 K562→HepG2": {
+    "pair": "K562GW->HepG2Essential",
+    "n_scored": 1299,
+    "actual": 0.7578655717212159,
+    "permuted": 0.5706031605918536,
+    "habitual": 0.6837275798041483,
+    "specific": 0.18726241112936218,
+    "specific_sd": 0.13288692040409017,
+    "t_specific": 50.78938446629725,
+    "frac_specific_positive": 0.9407236335642802
+  }
+}
