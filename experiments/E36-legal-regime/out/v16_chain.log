@@ -1,0 +1,63 @@
+=== stage=build ===
+gate 10,779  对照 18,400  MDE 中位 0.0149
+选中 8 个扰动: [np.str_('TCF7L2'), np.str_('GNG12'), np.str_('VCL'), np.str_('COX4I1'), np.str_('MAT2A'), np.str_('PAXIP1'), np.str_('SLIRP'), np.str_('ZNF581')]
+共同基因 7,016
+集外通道 K_OFF=550 LAMBDA_OFF=1.0 Bd 非零 56,128
+  TCF7L2     n_src=    1 K=  288 |R̂|=  288  真实细胞   484
+  GNG12      n_src=    5 K=  288 |R̂|=  288  真实细胞   677
+  VCL        n_src=    1 K=  288 |R̂|=  288  真实细胞   894
+  COX4I1     n_src=   12 K=  288 |R̂|=  288  真实细胞  1058
+  MAT2A      n_src=   82 K=  288 |R̂|=  288  真实细胞  1428
+  PAXIP1     n_src=   38 K=  288 |R̂|=  288  真实细胞  1644
+  SLIRP      n_src=   10 K=  288 |R̂|=  288  真实细胞  2000
+  ZNF581     n_src=    1 K=  288 |R̂|=  288  真实细胞  2502
+pred_v16.h5ad  (21600, 18080)  279 MB
+
+build 完成 140s
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+/Users/chetianc/vcc2026/.venv/lib/python3.12/site-packages/scanpy/tools/_rank_genes_groups.py:496: RuntimeWarning: invalid value encountered in divide
+  scores = (
+de_lfc_nmae: omitted 1 perturbation(s) for fewer than 10 gated genes (e.g. MAT2A). The gate is real-side only, so this set is the same for every submission.
+compute_metrics 完成 1649s
+metric 'expr_distance_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased' not scored (scored=False)
+metric 'expr_mse_unbiased_capped' not scored (scored=False)
+metric 'expr_real_mass_ratio' not scored (scored=False)
+
+======================================================================================================================
+2×2：lfc_all × force_mean —— 官方 b_lo/r_lo 刻度
+======================================================================================================================
+指标                                          V8 raw    V9 raw   V13 raw   V16 raw |    V8 lo    V9 lo   V13 lo   V16 lo
+----------------------------------------------------------------------------------------------------------------------
+pds_cosine                                  0.7500    0.7679    0.8750    0.8571 |   0.5855   0.6273   0.8782   0.8364
+expr_mse_unbiased_capped_norm               1.0819    1.7156    2.2208    2.8519 |   0.0000   0.0000   0.0000   0.0000
+de_wilcoxon_sig_jaccard                     0.0482    0.0116    0.0482    0.0269 |   0.0769  -0.0265   0.0770   0.0168
+de_wilcoxon_lfc_nmae                        1.0004    0.9942    1.0115    1.0059 |   0.0009   0.0107  -0.0168  -0.0079
+de_wilcoxon_direction_fidelity_yield_raw    0.4919    0.4259    0.5023    0.4746 |  -0.0453  -0.2727  -0.0092  -0.1050
+de_wilcoxon_direction_reach_raw             0.1482    0.1650    0.0250    0.0350 |   0.1110   0.1295  -0.0241  -0.0132
+----------------------------------------------------------------------------------------------------------------------
+avg_score (lo)                                                                   |   0.1215   0.0780   0.1508   0.1212
+avg_score (hi)                                                                   |   0.0848   0.0447   0.1069   0.0802
+仓库内部（不可外推）                                                                       | V16 0.1116
+
+======================================================================================================================
+① V16 vs 合法基线 V9    ② lfc_all 的收益在合法 regime 下保留了多少
+======================================================================================================================
+  lfc_all 在 force_mean=True  下的收益 (V13−V8)  = +0.0293
+  lfc_all 在 force_mean=False 下的收益 (V16−V9)  = +0.0431
+  交互项 = +0.0138   **不可加**
+  保留比例 = 147.1%
+
+判定（门在 build 前写下）：V16 lo 0.1212 vs V9 + 1 量子 0.0850 ⇒ **合法提交用 V16**
+对榜首 0.1899：差 -0.0687
+
+⚠️ 合法性本身要看 compute_metrics 日志里的抽样校正折扣倍数（issue #348），
+   须 ≥ 0.7。V9 是 0.952×，V8/V13/V14 是 0.484×。本脚本读不到它。
+
+已存 /Users/chetianc/code/vcc2026-stage1-lab/experiments/E36-legal-regime/out/score_v16.json   耗时 1649s
+已清理 pred_v16.h5ad（279 MB）
